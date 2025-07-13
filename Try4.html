@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Big-c</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; background: #f4f7f9; color: #333;
+  }
+  header {
+    background: #2c3e50; color: white; padding: 20px; text-align: center;
+    font-size: 1.6rem; font-weight: 700;
+  }
+  .container {
+    max-width: 1100px; margin: 20px auto; background: white; padding: 20px;
+    border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  #login-section, #dashboard, #admin-dashboard {
+    max-width: 500px; margin: 0 auto;
+  }
+  label {
+    display: block; margin-top: 15px; font-weight: 600;
+  }
+  input[type=text], input[type=password], select, textarea {
+    width: 100%; padding: 10px; margin-top: 6px;
+    border: 1px solid #ccc; border-radius: 5px; font-size: 1rem;
+    box-sizing: border-box;
+  }
+  textarea { resize: vertical; }
+  button {
+    margin-top: 20px; padding: 12px; width: 100%; font-size: 1.1rem;
+    background-color: #2980b9; color: white; border: none; border-radius: 5px;
+    cursor: pointer; transition: background-color 0.3s ease;
+  }
+  button:hover { background-color: #1c5980; }
+  .logout-btn {
+    background-color: #c0392b; width: auto; padding: 10px 20px;
+    float: right; margin-bottom: 20px; border-radius: 5px;
+  }
+  .logout-btn:hover { background-color: #7a2018; }
+  .welcome-msg {
+    font-weight: 700; font-size: 1.2rem; margin-bottom: 10px;
+  }
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 15px;
+  }
+  th, td {
+    border: 1px solid #ddd; padding: 8px; text-align: left;
+  }
+  th {
+    background: #3498db; color: white;
+  }
+  select.filter-select {
+    width: auto; margin-left: 10px; padding: 6px;
+  }
+  .filter-row {
+    margin: 15px 0;
+  }
+  canvas {
+    max-width: 100%; margin-top: 25px;
+  }
+  .status-open { color: #e74c3c; font-weight: 700; }
+  .status-in-progress { color: #f39c12; font-weight: 700; }
+  .status-resolved { color: #27ae60; font-weight: 700; }
+  @media(max-width: 600px) {
+    #login-section, #dashboard, #admin-dashboard {
+      max-width: 95%;
+      margin: 10px auto;
+    }
+    button, input, select, textarea {
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>Big-c Complaint Ticketing Tool</header>
+
+<div class="container">
+  <!-- Login -->
+  <div id="login-section">
+    <h2>Login</h2>
+    <form id="login-form">
+      <label for="emp-code">Employee Code</label>
+      <input type="text" id="emp-code" placeholder="Enter employee code" required />
+      
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter password" required />
+      
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- Employee Dashboard -->
+  <div id="dashboard" style="display:none;">
+    <button id="logout-btn" class="logout-btn">Logout</button>
+    <div class="welcome-msg" id="welcome-msg"></div>
+
+    <form id="complaint-form">
+      <h3>Submit a Complaint</h3>
+      <label for="store-name">Store Name</label>
+      <select id="store-name" required>
+        <option value="">-- Select Store --</option>
+        <option>Main Branch</option>
+        <option>Downtown Branch</option>
+        <option>Westside Branch</option>
+        <option>Eastside Branch</option>
+        <option>North Branch</option>
+        <option>South Branch</option>
+      </select>
+
+      <label for="category">Category</label>
+      <select id="category" required>
+        <option value="">-- Select Category --</option>
+        <option>IT Issue</option>
+        <option>HR Issue</option>
+        <option>Facilities</option>
+        <option>Other</option>
+      </select>
+
+      <label for="priority">Priority</label>
+      <select id="priority" required>
+        <option value="">-- Select Priority --</option>
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
+      </select>
+
+      <label for="description">Description</label>
+      <textarea id="description" rows="4" placeholder="Describe your complaint..." required></textarea>
+      
+      <button type="submit">Submit Complaint</button>
+    </form>
+
+    <h3>Your Complaints</h3>
+    <table id="employee-complaints-table" aria-label="Your complaints table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Category</th>
+          <th>Department</th>
+          <th>Priority</th>
+          <th>Description</th>
+          <th>Store</th>
+          <th>Status</th>
+          <th>Date Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- complaints will appear here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Admin / HOD Dashboard -->
+  <div id="admin-dashboard" style="display:none; max-width: 1000px; margin: 20px auto;">
+    <button id="admin-logout-btn" class="logout-btn">Logout</button>
+    <div class="welcome-msg" id="admin-welcome-msg"></div>
+
+    <h3>All Complaints</h3>
+
+    <div class="filter-row">
+      Filter by:
+      <select id="filter-status" class="filter-select">
+        <option value="">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+      </select>
+
+      <select id="filter-category" class="filter-select">
+        <option value="">All Categories</option>
+        <option>IT Issue</option>
+        <option>HR Issue</option>
+        <option>Facilities</option>
+        <option>Other</option>
+      </select>
+
+      <select id="filter-priority" class="filter-select">
+        <option value="">All Priorities</option>
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
+      </select>
+
+      <select id="filter-department" class="filter-select">
+        <option value="">All Departments</option>
+        <option>IT Department</option>
+        <option>HR Department</option>
+        <option>Facilities Department</option>
+        <option>Other</option>
+      </select>
+
+      <select id="filter-store" class="filter-select">
+        <option value="">All Stores</option>
+        <option>Main Branch</option>
+        <option>Downtown Branch</option>
+        <option>Westside Branch</option>
+        <option>Eastside Branch</option>
+        <option>North Branch</option>
+        <option>South Branch</option>
+      </select>
+    </div>
+
+    <table id="admin-complaints-table" aria-label="All complaints table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Employee</th>
+          <th>Category</th>
+          <th>Department</th>
+          <th>Priority</th>
+          <th>Description</th>
+          <th>Store</th>
+          <th>Status</th>
+          <th>Date Submitted</th>
+          <th>Update Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- complaints will appear here -->
+      </tbody>
+    </table>
+
+    <h3>Complaints Dashboard</h3>
+    <canvas id="status-chart"></canvas>
+    <canvas id="priority-chart" style="margin-top: 40px;"></canvas>
+    <canvas id="store-chart" style="margin-top: 40px;"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const employees = {
+    "bigc1001": { password: "pass1", role: "employee", department: "IT Department" },
+    "bigc1002": { password: "pass2", role: "employee", department: "HR Department" },
+    "bigc1111": { password: "adminpass", role: "admin" },
+    "hod_it": { password: "hodpass", role: "hod", department: "IT Department" },
+    "hod_hr": { password: "hodpass", role: "hod", department: "HR Department" }
+  };
+
+  const stores = [
+    "Main Branch",
+    "Downtown Branch",
+    "Westside Branch",
+    "Eastside Branch",
+    "North Branch",
+    "South Branch"
+  ];
+
+  const departments = [
+    "IT Department",
+    "HR Department",
+    "Facilities Department",
+    "Other"
+  ];
+
+  let currentUser = null;
+  let currentRole = null;
+
+  const loginSection = document.getElementById('login-section');
+  const dashboard = document.getElementById('dashboard');
+  const adminDashboard = document.getElementById('admin-dashboard');
+  const welcomeMsg = document.getElementById('welcome-msg');
+  const adminWelcomeMsg = document.getElementById('admin-welcome-msg');
+  const filterDepartment = document.getElementById('filter-department');
+
+  // Utility: load complaints from localStorage
+  function loadComplaints() {
+    return JSON.parse(localStorage.getItem('complaints') || '[]');
+  }
+  // Save complaints to localStorage
+  function saveComplaints(data) {
+    localStorage.setItem('complaints', JSON.stringify(data));
+  }
+
+  // Generate unique ID for complaints
+  function generateId() {
+    return 'CMP' + Math.floor(Math.random() * 1000000);
+  }
+
+  // Login handler
+  document.getElementById('login-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const code = document.getElementById('emp-code').value.trim();
+    const pass = document.getElementById('password').value;
+
+    if (employees[code] && employees[code].password === pass) {
+      currentUser = code;
+      currentRole = employees[code].role;
+      loginSection.style.display = 'none';
+      if (currentRole === 'employee') {
+        dashboard.style.display = 'block';
+        welcomeMsg.textContent = `Welcome, ${currentUser}`;
+        renderEmployeeComplaints();
+      } else if (currentRole === 'admin') {
+        adminDashboard.style.display = 'block';
+        adminWelcomeMsg.textContent = `Welcome, Admin ${currentUser}`;
+        filterDepartment.style.display = 'inline-block'; // show department filter for admin
+        renderAdminComplaints();
+        renderDashboardCharts();
+      } else if (currentRole === 'hod') {
+        adminDashboard.style.display = 'block';
+        adminWelcomeMsg.textContent = `Welcome, HOD ${currentUser} (${employees[currentUser].department})`;
+        filterDepartment.style.display = 'none'; // hide department filter for HOD
+        renderHodComplaints();
+        renderDashboardCharts();
+      }
+    } else {
+      alert('Invalid credentials');
+    }
+    // Clear login form
+    document.getElementById('login-form').reset();
+  });
+
+  // Logout buttons
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    logout();
+  });
+  document.getElementById('admin-logout-btn').addEventListener('click', () => {
+    logout();
+  });
+
+  function logout() {
+    currentUser = null;
+    currentRole = null;
+    loginSection.style.display = 'block';
+    dashboard.style.display = 'none';
+    adminDashboard.style.display = 'none';
+    adminWelcomeMsg.textContent = '';
+    welcomeMsg.textContent = '';
+  }
+
+  // Employee submits complaint
+  document.getElementById('complaint-form').addEventListener('submit', e => {
+    e.preventDefault();
+
+    const storeName = document.getElementById('store-name').value;
+    const category = document.getElementById('category').value;
+    const priority = document.getElementById('priority').value;
+    const description = document.getElementById('description').value.trim();
+    const department = employees[currentUser].department || "Other";
+
+    if (!storeName || !category || !priority || !description) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    const complaints = loadComplaints();
+    complaints.push({
+      id: generateId(),
+      employee: currentUser,
+      store: storeName,
+      category,
+      department,
+      priority,
+      description,
+      status: 'Open',
+      date: new Date().toLocaleString()
+    });
+
+    saveComplaints(complaints);
+    alert('Complaint submitted successfully!');
+    document.getElementById('complaint-form').reset();
+    renderEmployeeComplaints();
+  });
+
+  // Render employee complaints
+  function renderEmployeeComplaints() {
+    const complaints = loadComplaints().filter(c => c.employee === currentUser);
+    const tbody = document.querySelector('#employee-complaints-table tbody');
+    tbody.innerHTML = '';
+
+    if (complaints.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No complaints submitted yet.</td></tr>`;
+      return;
+    }
+
+    complaints.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${c.id}</td>
+        <td>${c.category}</td>
+        <td>${c.department}</td>
+        <td>${c.priority}</td>
+        <td>${c.description}</td>
+        <td>${c.store}</td>
+        <td class="status-${c.status.toLowerCase().replace(' ', '-')}">${c.status}</td>
+        <td>${c.date}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Render admin complaints with filters
+  function renderAdminComplaints() {
+    let complaints = loadComplaints();
+
+    const filterStatus = document.getElementById('filter-status').value;
+    const filterCategory = document.getElementById('filter-category').value;
+    const filterPriority = document.getElementById('filter-priority').value;
+    const filterDept = document.getElementById('filter-department').value;
+    const filterStore = document.getElementById('filter-store').value;
+
+    if (filterStatus) complaints = complaints.filter(c => c.status === filterStatus);
+    if (filterCategory) complaints = complaints.filter(c => c.category === filterCategory);
+    if (filterPriority) complaints = complaints.filter(c => c.priority === filterPriority);
+    if (filterDept) complaints = complaints.filter(c => c.department === filterDept);
+    if (filterStore) complaints = complaints.filter(c => c.store === filterStore);
+
+    renderComplaintsTable(complaints);
+  }
+
+  // Render HOD complaints (filtered to their department)
+  function renderHodComplaints() {
+    let complaints = loadComplaints().filter(c => c.department === employees[currentUser].department);
+
+    const filterStatus = document.getElementById('filter-status').value;
+    const filterCategory = document.getElementById('filter-category').value;
+    const filterPriority = document.getElementById('filter-priority').value;
+    const filterStore = document.getElementById('filter-store').value;
+
+    if (filterStatus) complaints = complaints.filter(c => c.status === filterStatus);
+    if (filterCategory) complaints = complaints.filter(c => c.category === filterCategory);
+    if (filterPriority) complaints = complaints.filter(c => c.priority === filterPriority);
+    if (filterStore) complaints = complaints.filter(c => c.store === filterStore);
+
+    renderComplaintsTable(complaints);
+  }
+
+  // Common function to render complaints table for admin & hod
+  function renderComplaintsTable(complaints) {
+    const tbody = document.querySelector('#admin-complaints-table tbody');
+    tbody.innerHTML = '';
+
+    if (complaints.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No complaints found.</td></tr>`;
+      return;
+    }
+
+    complaints.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${c.id}</td>
+        <td>${c.employee}</td>
+        <td>${c.category}</td>
+        <td>${c.department}</td>
+        <td>${c.priority}</td>
+        <td>${c.description}</td>
+        <td>${c.store}</td>
+        <td class="status-${c.status.toLowerCase().replace(' ', '-')}">${c.status}</td>
+        <td>${c.date}</td>
+        <td>
+          <select class="status-update" data-id="${c.id}">
+            <option value="Open" ${c.status === 'Open' ? 'selected' : ''}>Open</option>
+            <option value="In Progress" ${c.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+            <option value="Resolved" ${c.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Attach event listeners for status update dropdowns
+    document.querySelectorAll('.status-update').forEach(select => {
+      select.addEventListener('change', e => {
+        const id = e.target.getAttribute('data-id');
+        const newStatus = e.target.value;
+        updateComplaintStatus(id, newStatus);
+      });
+    });
+  }
+
+  // Update complaint status
+  function updateComplaintStatus(id, status) {
+    const complaints = loadComplaints();
+    const complaint = complaints.find(c => c.id === id);
+    if (complaint) {
+      complaint.status = status;
+      saveComplaints(complaints);
+      if(currentRole === 'admin') {
+        renderAdminComplaints();
+      } else if(currentRole === 'hod') {
+        renderHodComplaints();
+      }
+      renderDashboardCharts();
+    }
+  }
+
+  // Filter change handlers for admin/hod
+  document.getElementById('filter-status').addEventListener('change', () => {
+    if (currentRole === 'admin') renderAdminComplaints();
+    else if (currentRole === 'hod') renderHodComplaints();
+  });
+  document.getElementById('filter-category').addEventListener('change', () => {
+    if (currentRole === 'admin') renderAdminComplaints();
+    else if (currentRole === 'hod') renderHodComplaints();
+  });
+  document.getElementById('filter-priority').addEventListener('change', () => {
+    if (currentRole === 'admin') renderAdminComplaints();
+    else if (currentRole === 'hod') renderHodComplaints();
+  });
+  document.getElementById('filter-department').addEventListener('change', () => {
+    if (currentRole === 'admin') renderAdminComplaints();
+  });
+  document.getElementById('filter-store').addEventListener('change', () => {
+    if (currentRole === 'admin') renderAdminComplaints();
+    else if (currentRole === 'hod') renderHodComplaints();
+  });
+
+  // Chart.js dashboard charts
+  let statusChart, priorityChart, storeChart;
+  function renderDashboardCharts() {
+    let complaints;
+    if(currentRole === 'admin') {
+      complaints = loadComplaints();
+      // Apply department filter if any
+      const filterDept = document.getElementById('filter-department').value;
+      if(filterDept) complaints = complaints.filter(c => c.department === filterDept);
+    } else if(currentRole === 'hod') {
+      complaints = loadComplaints().filter(c => c.department === employees[currentUser].department);
+    } else {
+      return; // no charts for employees
+    }
+
+    // Apply store filter if any
+    const filterStore = document.getElementById('filter-store').value;
+    if(filterStore) complaints = complaints.filter(c => c.store === filterStore);
+
+    // Aggregate statuses
+    const statusCounts = { Open: 0, "In Progress": 0, Resolved: 0 };
+    complaints.forEach(c => {
+      if(statusCounts[c.status] !== undefined) statusCounts[c.status]++;
+    });
+
+    // Aggregate priorities
+    const priorityCounts = { Low: 0, Medium: 0, High: 0 };
+    complaints.forEach(c => {
+      if(priorityCounts[c.priority] !== undefined) priorityCounts[c.priority]++;
+    });
+
+    // Aggregate stores
+    const storeCounts = {};
+    stores.forEach(store => {
+      storeCounts[store] = complaints.filter(c => c.store === store).length;
+    });
+
+    // Destroy previous charts if exist
+    if(statusChart) statusChart.destroy();
+    if(priorityChart) priorityChart.destroy();
+    if(storeChart) storeChart.destroy();
+
+    const ctxStatus = document.getElementById('status-chart').getContext('2d');
+    statusChart = new Chart(ctxStatus, {
+      type: 'doughnut',
+      data: {
+        labels: ['Open', 'In Progress', 'Resolved'],
+        datasets: [{
+          label: 'Status Distribution',
+          data: [statusCounts.Open, statusCounts["In Progress"], statusCounts.Resolved],
+          backgroundColor: ['#e74c3c', '#f39c12', '#27ae60']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: true, text: 'Complaints Status Distribution' }
+        }
+      }
+    });
+
+    const ctxPriority = document.getElementById('priority-chart').getContext('2d');
+    priorityChart = new Chart(ctxPriority, {
+      type: 'bar',
+      data: {
+        labels: ['Low', 'Medium', 'High'],
+        datasets: [{
+          label: 'Priority Distribution',
+          data: [priorityCounts.Low, priorityCounts.Medium, priorityCounts.High],
+          backgroundColor: ['#3498db', '#f1c40f', '#e74c3c']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'Complaints Priority Distribution' }
+        },
+        scales: {
+          y: { beginAtZero: true, precision: 0 }
+        }
+      }
+    });
+
+    const ctxStore = document.getElementById('store-chart').getContext('2d');
+    storeChart = new Chart(ctxStore, {
+      type: 'bar',
+      data: {
+        labels: stores,
+        datasets: [{
+          label: 'Complaints by Store',
+          data: stores.map(store => storeCounts[store]),
+          backgroundColor: '#9b59b6'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'Complaints by Store' }
+        },
+        scales: {
+          y: { beginAtZero: true, precision: 0 }
+        }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
